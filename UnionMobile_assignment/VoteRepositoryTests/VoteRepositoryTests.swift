@@ -56,6 +56,49 @@ final class VoteRepositoryTests: XCTestCase {
         }
     }
     
+    func testGetVotedCandidates() async throws {
+        do {
+            let votedIds = try await repository.getVotedCandidates(userId: "HaHa")
+            print("=== 투표한 후보자 목록 ===")
+            print("투표한 후보자 ID들: \(votedIds)")
+            print("투표 수: \(votedIds.count)")
+            print("=====================")
+            XCTAssertNotNil(votedIds)
+        } catch {
+            XCTFail("API 호출 실패: \(error)")
+            print("에러 발생: \(error)")
+        }
+    }
+    
+    func testGetCandidateList() async throws {
+           // When
+           do {
+               let result = try await repository.getCandidateList(
+                   page: 0,
+                   size: 3,
+                   sort: ["voteCnt,DESC", "name,ASC"],
+                   searchKeyword: nil
+               )
+               
+               // Then
+               print("=== 후보자 목록 ===")
+               print("총 페이지: \(result.totalPages)")
+               print("총 항목 수: \(result.totalElements)")
+               print("현재 페이지: \(result.currentPage)")
+               print("\n후보자들:")
+               result.items.forEach { item in
+                   print("- \(item.name) (ID: \(item.id), 득표수: \(item.voteCount))")
+               }
+               print("================")
+               
+               XCTAssertFalse(result.items.isEmpty)
+               XCTAssertGreaterThan(result.totalElements, 0)
+           } catch {
+               XCTFail("API 호출 실패: \(error)")
+               print("에러 발생: \(error)")
+           }
+       }
+    
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
