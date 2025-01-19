@@ -63,18 +63,21 @@ struct CountdownTimerView: View {
             Text(":")
                 .font(.system(size: 40, weight: .bold))
                 .offset(y: -10)
+                .foregroundStyle(.white)
             
             TimeBlockView(value: hours, label: "HR")
             
             Text(":")
                 .font(.system(size: 40, weight: .bold))
                 .offset(y: -10)
+                .foregroundStyle(.white)
                 
             TimeBlockView(value: minutes, label: "MIN")
             
             Text(":")
                 .font(.system(size: 40, weight: .bold))
                 .offset(y: -10)
+                .foregroundStyle(.white)
                 
             TimeBlockView(value: seconds, label: "SEC")
         }
@@ -120,9 +123,10 @@ struct TimeBlockView: View {
     var body: some View {
         VStack(spacing: 4) {
             Text("\(String(format: "%02d", value))")
-                .font(.system(size: 40, weight: .bold, design: .monospaced))
-                .frame(width: 80, height: 80)
-                .background(Color.gray.opacity(0.1))
+                .font(.system(size: 32, weight: .bold, design: .monospaced))
+                .foregroundStyle(.white)
+                .frame(width: 60, height: 60)
+                .background(Color.gray.opacity(0.5))
                 .cornerRadius(10)
             
             Text(label)
