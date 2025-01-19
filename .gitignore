@@ -104,6 +104,12 @@ xcuserdata
 
 ### Xcode ###
 
+# macOS
+.DS_Store
+._.DS_Store
+**/.DS_Store
+**/._.DS_Store
+
 ## Xcode 8 and earlier
 
 ### Xcode Patch ###
