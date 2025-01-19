@@ -25,7 +25,7 @@ struct UnionMobile_assignmentApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            LoginView()
         }
         .modelContainer(sharedModelContainer)
     }

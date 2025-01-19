@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>UIAppFonts</key>
+	<array>
+		<string>KantumruyPro-Bold.ttf</string>
+		<string>KantumruyPro-BoldItalic.ttf</string>
+		<string>KantumruyPro-ExtraLight.ttf</string>
+		<string>KantumruyPro-ExtraLightItalic.ttf</string>
+		<string>KantumruyPro-Italic.ttf</string>
+		<string>KantumruyPro-Light.ttf</string>
+		<string>KantumruyPro-LightItalic.ttf</string>
+		<string>KantumruyPro-Medium.ttf</string>
+		<string>KantumruyPro-MediumItalic.ttf</string>
+		<string>KantumruyPro-Regular.ttf</string>
+		<string>KantumruyPro-SemiBold.ttf</string>
+		<string>KantumruyPro-SemiBoldItalic.ttf</string>
+		<string>KantumruyPro-Thin.ttf</string>
+		<string>KantumruyPro-ThinItalic.ttf</string>
+	</array>
+</dict>
+</plist>
