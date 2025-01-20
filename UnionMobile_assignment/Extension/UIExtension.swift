@@ -50,8 +50,16 @@ actor ImageCache {
     private let cache = NSCache<NSString, UIImage>()
     
     private init() {
-        cache.countLimit = 100  // 최대 캐시 아이템 수
-        cache.totalCostLimit = 1024 * 1024 * 100  // 최대 100MB
+
+        // 디바이스 메모리에 따라 동적으로 설정
+        let totalMemory = ProcessInfo.processInfo.physicalMemory
+        let maxMemory = totalMemory / 4
+        
+        cache.countLimit = 200
+        cache.totalCostLimit = min(
+            1024 * 1024 * 50,
+            Int(maxMemory)
+        )
     }
     
     func image(for url: URL, targetSize: CGSize) -> UIImage? {

@@ -10,10 +10,13 @@ import SwiftUI
 struct MainView: View {
     @State private var showingPerformanceTest = false
     
-    @StateObject var viewModel: MainViewModel
+    @StateObject private var viewModel: MainViewModel
+    private let container: DIContainer
+    @EnvironmentObject var authState: AuthState
     
-       init(viewModel: MainViewModel) {
-           _viewModel = StateObject(wrappedValue: viewModel)
+       init(container: DIContainer) {
+           self.container = container
+           _viewModel = StateObject(wrappedValue: container.makeMainViewModel())
        }
     
     var body: some View {
@@ -172,7 +175,101 @@ struct MainView: View {
                     }
                     .padding(.top, 16)
                     .background(.red)
+                    Group {
+                        if viewModel.isLoading {
+                            ProgressView()
+                                .frame(maxWidth: .infinity, minHeight: 200)
+                        } else if let error = viewModel.error {
+                            VStack {
+                                Text("데이터를 불러오는데 실패했습니다")
+                                    .foregroundColor(.red)
+                                Button("다시 시도") {
+                                    Task {
+                                        await viewModel.fetchCandidates(userId:authState.userId)
+                                        print("\(authState.userId) 다시시도 버튼")
+                                    }
+                                }
+                            }
+                            .frame(maxWidth: .infinity, minHeight: 200)
+                        } else if viewModel.candidates.isEmpty {
+                            Text("후보자가 없습니다")
+                                .frame(maxWidth: .infinity, minHeight: 200)
+                                .foregroundStyle(.white)
+                        } else {
+                            CandidateGridView(candidates: viewModel.candidates,container:container,viewModel:viewModel)
+                                .background(.black)
+                                .padding(.top, 16)
+                                .task {
+                                    do {
+                                        try await viewModel.checkUserVoted(userId: authState.userId)
+                                        print("\(authState.userId) checkUserVoted")
+                                    } catch {
+                                          print("투표 확인 실패: \(error)")
+                                    }
+                               }
+                           }
+                    }
                     
+                    Text("© 2024 World Miss University. All rights reserved.")
+                        .font(.kantumruyPro(size: 12, family: .bold))
+                        .foregroundStyle(.white)
+                        .padding(.vertical, 24)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            
+                .onAppear {
+                    Task {
+                        await viewModel.fetchCandidates(userId:authState.userId)
+                   
+                    }
+                }
+                .refreshable {
+                    do {
+                        await viewModel.fetchCandidates(forceRefresh: true,userId:authState.userId)
+                        print("\(authState.userId) fetchCandidates-refreshable")
+                    } catch {
+                        print("Refresh failed: \(error)")
+                    }
+                }
+                .onDisappear {
+                print("MainView가 사라짐")
+                }
+                .frame(maxWidth: .infinity)
+                .background(.black)
+                .toolbar {
+                    ToolbarItem(placement: .principal) {
+                        Text("2024 WMU")
+                            .foregroundStyle(.black)
+                    }
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: {
+                            print("로그아웃 버튼이 클릭되었습니다")
+                            authState.logout()
+
+                        }) {
+                            Text("로그아웃")
+                                .foregroundStyle(.black)
+                        }
+                    }
+                    
+                }
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(.white, for: .navigationBar)
+               .toolbarBackground(.visible, for: .navigationBar)
+               .toolbarColorScheme(.light, for: .navigationBar)
+        }
+    }
+}
+
+//#Preview {
+//    MainView()
+//}
+
+
+
+
+
 
 //            #if DEBUG
 //               // 테스트용 버튼들
@@ -189,79 +286,7 @@ struct MainView: View {
 //               }
 //               .padding()
 //               #endif
-                    
+
 //                    Button("성능 테스트 실행") {
 //                                   showingPerformanceTest = true
 //                               }
-                    
-                    Group {
-                        if viewModel.isLoading {
-                            ProgressView()
-                                .frame(maxWidth: .infinity, minHeight: 200)
-                        } else if let error = viewModel.error {
-                            VStack {
-                                Text("데이터를 불러오는데 실패했습니다")
-                                    .foregroundColor(.red)
-                                Button("다시 시도") {
-                                    viewModel.fetchCandidates()
-                                }
-                            }
-                            .frame(maxWidth: .infinity, minHeight: 200)
-                        } else if viewModel.candidates.isEmpty {
-                            Text("후보자가 없습니다")
-                                .frame(maxWidth: .infinity, minHeight: 200)
-                                .foregroundStyle(.white)
-                        } else {
-                            CandidateGridView(candidates: viewModel.candidates)
-                                .background(.black)
-                                .padding(.top, 16)
-                        }
-                    }
-                    
-                    Text("© 2024 World Miss University. All rights reserved.")
-                        .font(.kantumruyPro(size: 12, family: .bold))
-                        .foregroundStyle(.white)
-                        .padding(.vertical, 24)
-                     
-                    
-                    
-                    
-
-                }
-//                .sheet(isPresented: $showingPerformanceTest) {
-//                           PerformanceTestView(candidates: viewModel.candidates)
-//                       }
-                .frame(maxWidth: .infinity)
-            }
-            .onAppear {
-                viewModel.fetchCandidates()
-            }
-            .refreshable {
-                await viewModel.fetchCandidates()
-            }
-            
-            
-            .frame(maxWidth: .infinity)
-            
-            .background(.black)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("2024 WMU")
-                        .foregroundStyle(.black)
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.white, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarColorScheme(.light, for: .navigationBar)
-        }
-    }
-}
-
-//#Preview {
-//    MainView()
-//}
-
-
-
-

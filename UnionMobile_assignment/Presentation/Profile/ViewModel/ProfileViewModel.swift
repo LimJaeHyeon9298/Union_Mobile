@@ -22,13 +22,21 @@ final class CandidateDetailViewModel: ObservableObject {
     @Published private(set) var candidateDetail: Candidate?
     @Published private(set) var isLoading = false
     @Published private(set) var error: Error?
+    @Published private(set) var basicInfo: CandidateList.Item
+    @EnvironmentObject var authState: AuthState
     
-    init(voteUseCase: VoteUseCase) {
+    init(voteUseCase: VoteUseCase, basicInfo: CandidateList.Item) {
         self.voteUseCase = voteUseCase
+        self.basicInfo = basicInfo
     }
     
     @MainActor
-    func fetchCandidateDetail(id: Int) {
+        func submitVote(request: VoteRequest) async throws {
+            try await voteUseCase.vote(request: request)
+        }
+    
+    @MainActor
+    func fetchCandidateDetail(userId: String) {
         guard !isLoading else { return }
         
         isLoading = true
@@ -36,9 +44,11 @@ final class CandidateDetailViewModel: ObservableObject {
         
         Task {
             do {
-                let userId = "some_user_id"
-                let detail = try await voteUseCase.getCandidate(id: id, userId: userId)
+                let userId = userId
+                let detail = try await voteUseCase.getCandidate(id: basicInfo.id, userId: userId)
                 self.candidateDetail = detail
+                print("CandidateDetails ---- \(candidateDetail)")
+                print("\(userId) fetchCandidateDetail()- CandidateDetailViewModel")
             } catch {
                 self.error = error
             }

@@ -10,27 +10,26 @@ import SwiftUI
 struct CandidateCardView: View {
     let width: CGFloat
     let candidateId: CandidateList.Item
+    let container: DIContainer
+    @ObservedObject var viewModel: MainViewModel
+    @EnvironmentObject var authState: AuthState
+    
     @State private var loadingStartTime: Date?
     @State private var loadingTime: TimeInterval?
     @State private var loadCount = 0
+    @State private var showAlreadyVotedAlert = false
+    @State private var showMaxVotesAlert = false
+    @State private var showVoteSuccessAlert = false
+    
+    private var isVoted: Bool {
+        viewModel.votedCandidates.contains(candidateId.id)
+    }
 
     var body: some View {
-        NavigationLink(destination: CandidateDetailView(candidateId: candidateId)) {
+        NavigationLink(destination: CandidateDetailView(candidateId: candidateId,container: container)) {
             VStack(spacing: 8) {
                 
                 let imageSize = CGSize(width: width - 24, height: width - 24)
-//                    CachedAsyncImage(url: candidateId.profileUrl,targetSize: imageSize) { image in
-//                        image
-//                            .resizable()
-//                            .scaledToFit()
-//                            .frame(width: imageSize.width, height: imageSize.height)
-//                        } placeholder: {
-//                            ProgressView()
-//                                .frame(width: imageSize.width, height: imageSize.height)
-//                        }
-//                        .clipShape(RoundedRectangle(cornerRadius: 8))
-//
-                
                 CachedAsyncImage(url: candidateId.profileUrl, targetSize: imageSize) { image in
                     image
                         .resizable()
@@ -71,15 +70,33 @@ struct CandidateCardView: View {
                     .foregroundStyle(.gray)
                 
                 Button {
-                    print("hi")
+                    if isVoted {
+                        showAlreadyVotedAlert = true
+                    } else {
+                        Task {
+                            let request = VoteRequest(userId: authState.userId, candidateId: candidateId.id)
+                            print("\(authState.userId) VoteRequest-request")
+                            
+                            do {
+                                try await viewModel.submitVote(request: request)
+                                showVoteSuccessAlert = true
+                            } catch {
+                                if case NetworkError.badRequest(let apiError) = error,
+                                    apiError.errorCode == "2005" {
+                                    showMaxVotesAlert = true
+                                }
+                                print("투표 실패: \(error)")
+                                }
+                        }
+                    }
                 } label: {
-                    Text("Voted")
+                    Text(isVoted ? "Voted" : "Vote")
                         .font(.kantumruyPro(size: 14, family: .semiBold))
-                        .foregroundStyle(.gray)
+                        .foregroundStyle(isVoted ? .blue : .white)
                         .frame(width: width - 24, height: 36)
                         .background(
                             RoundedRectangle(cornerRadius: 18)
-                                .fill(Color.blue)
+                                .fill(isVoted ? Color.white : Color.blue)
                         )
                 }
             }
@@ -87,12 +104,30 @@ struct CandidateCardView: View {
             .frame(width: width)
             .background(Color.black)
         }
+        .alert("이미 투표한 후보자입니다!", isPresented: $showAlreadyVotedAlert) {
+                    Button("확인", role: .cancel) { }
+                } message: {
+                    Text("다른 후보자에게 투표해주세요.")
+                }
+        
+        .alert("투표 제한", isPresented: $showMaxVotesAlert) {
+                    Button("확인", role: .cancel) { }
+                } message: {
+                    Text("투표는 3명까지 제한됩니다! 다음 기회에 투표해주세요.")
+                }
+        .alert("투표 완료", isPresented: $showVoteSuccessAlert) {  // 추가
+                Button("확인", role: .cancel) { }
+                } message: {
+                    Text("\(candidateId.name)님께 투표가 완료되었습니다.")
+                }
     }
 }
 
 struct CandidateGridView: View {
-    var hi = [1,2,3,4,5,6,7,8,9,10]
+    
     let candidates: [CandidateList.Item]
+    let container: DIContainer
+    @ObservedObject var viewModel: MainViewModel
     
     let columns = [
         GridItem(.flexible(), spacing: 16),
@@ -111,12 +146,12 @@ struct CandidateGridView: View {
                 spacing: spacing
             ) {
                 ForEach(candidates, id: \.id) { candidate in
-                    CandidateCardView(width: itemWidth,candidateId: candidate)
+                    CandidateCardView(width: itemWidth,candidateId: candidate,container: container,viewModel:viewModel)
                 }
             }
             .padding(.horizontal, 16)
         }
-        .frame(height: CGFloat(hi.count) * 320 / 2)
+        .frame(height: CGFloat(candidates.count) * 320 / 2)
     }
 }
 

@@ -20,43 +20,68 @@ struct ProfileView: View {
 
 struct CandidateDetailView: View {
     let candidateId: CandidateList.Item  // 후보자 ID
- //   @StateObject private var viewModel: CandidateDetailViewModel
-    let sampleImages = ["book", "person", "star", "heart"]
+    @StateObject private var viewModel: CandidateDetailViewModel
+    let container: DIContainer
     @Environment(\.dismiss) private var dismiss
+    @State private var showAlreadyVotedAlert = false
+    @State private var showMaxVotesAlert = false
+    @State private var showVoteSuccessAlert = false
+    @EnvironmentObject var authState: AuthState
     
-    init(candidateId: CandidateList.Item) {
-            self.candidateId = candidateId
+    init(candidateId: CandidateList.Item,container:DIContainer) {
+        self.candidateId = candidateId
+        self.container = container
+        _viewModel = StateObject(wrappedValue: container.makeCandidateDetailViewModel(basicInfo: candidateId))
         }
     
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
                 // 프로필 이미지
-                ImagePagerView(images: sampleImages)
+                if let detail = viewModel.candidateDetail {
+                    ImagePagerView(imageUrls: detail.profile.images.sorted(by: { $0.order < $1.order }).map(\.url))
+                } else {
+                    ProgressView()
+                        .frame(height: 300)
+                }
                 
                 VStack(alignment: .leading, spacing: 16) {
-
+                    
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("임재현\(candidateId)")
+                        Text("\(candidateId.name)")
                             .font(.kantumruyPro(size: 24, family: .semiBold))
                             .foregroundStyle(.white)
                         
-                        Text("Entry No.5")
-                            .font(.kantumruyPro(size: 16, family: .regular))
-                            .foregroundStyle(.blue)
+                        
+                        if let detail = viewModel.candidateDetail {
+                            Text("Entry No.\(detail.number)")
+                                .font(.kantumruyPro(size: 16, family: .regular))
+                                .foregroundStyle(.blue)
+                        } else {
+                            ProgressView()
+                                .frame(height: 20)
+                        }
                     }
                     
-                    VStack(alignment: .leading, spacing: 12) {
-                        ProfileSectionRow(title: "Name",value: "임재현")
-                            .padding(.top,8)
-                        ProfileSectionRow(title: "Age", value: "23")
-                        ProfileSectionRow(title: "Height",value: "170cm" )
-                        ProfileSectionRow( title: "University",value: "Seoul National University")
-                        ProfileSectionRow(title: "Major",value: "Computer Science")
- 
+                    if let detail = viewModel.candidateDetail {
+                        VStack(alignment: .leading, spacing: 12) {
+                            ProfileSectionRow(title: "Education", value: detail.profile.education)
+                                .padding(.top, 8)
+                            ProfileSectionRow(title: "Major", value: "\(detail.profile.major)")
+                            ProfileSectionRow(title: "Hobbies", value: detail.hobby)
+                            ProfileSectionRow(title: "Talent", value: detail.talent)
+                            ProfileSectionRow(title: "Ambition", value: detail.ambition)
+                        }
+                        .background(.red)
+                        .padding(.top, 8)
+                    } else {
+                        VStack {
+                            ProgressView()
+                                .frame(height: 200)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .background(.red)
                     }
-                    .background(.red)
-                    .padding(.top, 8)
                     
                     HStack {
                         Spacer()
@@ -71,20 +96,61 @@ struct CandidateDetailView: View {
                     // 투표 버튼
                     Button {
                         print("Vote tapped")
+                        if viewModel.candidateDetail?.isVoted == true {
+                            showAlreadyVotedAlert = true
+                        } else {
+                            print("Vote tapped")
+                            Task {
+                                let request = VoteRequest(userId: authState.userId, candidateId: candidateId.id)
+                                print("\(authState.userId) VoteRequest-Vote tapped")
+                                do {
+                                    try await viewModel.submitVote(request: request)
+                                    // 투표 후 상세 정보 다시 불러오기
+                                    viewModel.fetchCandidateDetail(userId: authState.userId)
+                                    showVoteSuccessAlert = true
+                                } catch let error  {
+                                    if case NetworkError.badRequest(let apiError) = error,
+                                       apiError.errorCode == "2005" {
+                                     
+                                       showMaxVotesAlert = true
+                                    }
+                                    print("투표 실패: \(error)")
+                                }
+                            }
+                        }
                     } label: {
-                        Text("Vote")
+                        Text(viewModel.candidateDetail?.isVoted == true ? "Voted" : "Vote")
                             .font(.kantumruyPro(size: 16, family: .semiBold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(viewModel.candidateDetail?.isVoted == true ? .blue : .white)
                             .frame(maxWidth: .infinity)
                             .frame(height: 50)
                             .background(
                                 RoundedRectangle(cornerRadius: 25)
-                                    .fill(Color.blue)
+                                    .fill(viewModel.candidateDetail?.isVoted == true ? Color.white : Color.blue)
                             )
                     }
                     .padding(.top, 24)
                 }
                 .padding(.horizontal, 20)
+            }
+            .alert("이미 투표한 후보자입니다!", isPresented: $showAlreadyVotedAlert) {
+                       Button("확인", role: .cancel) { }
+                   } message: {
+                       Text("다른 후보자에게 투표해주세요.")
+                   }
+            .alert("투표 제한", isPresented: $showMaxVotesAlert) {
+                        Button("확인", role: .cancel) { }
+                    } message: {
+                        Text("투표는 3명까지 제한됩니다! 다음 기회에 투표해주세요.")
+                    }
+            
+            .alert("투표 완료", isPresented: $showVoteSuccessAlert) {  // 추가
+                        Button("확인", role: .cancel) { }
+                    } message: {
+                        Text("\(candidateId.name)님께 투표가 완료되었습니다.")
+                    }
+            .onAppear {
+                viewModel.fetchCandidateDetail(userId: authState.userId)
             }
         }
         .navigationBarBackButtonHidden(true)
@@ -106,11 +172,13 @@ struct CandidateDetailView: View {
         .toolbarBackground(.white, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarColorScheme(.light, for: .navigationBar)
-
-
+        
+        
         .background(.black)
     }
 }
+
+
 
 // 정보 행 컴포넌트
 struct InfoRow: View {
@@ -157,28 +225,34 @@ struct ProfileSectionRow: View {
 }
 
 struct ImagePagerView: View {
-    let images: [String]
+    let imageUrls: [URL]
     @State private var currentPage = 0
     @State private var timer: Timer.TimerPublisher
     @State private var timerCancellable: AnyCancellable?
     @Environment(\.scenePhase) private var scenePhase
     
-    init(images: [String]) {
-        self.images = images
+    init(imageUrls: [URL]) {
+        
+        self.imageUrls = imageUrls
         self._timer = State(initialValue: Timer.publish(every: 3, on: .main, in: .common))
     }
     
     var body: some View {
         TabView(selection: $currentPage) {
-            ForEach(0..<images.count, id: \.self) { index in
-                Image(systemName: images[index])
-                    .resizable()
-                    .scaledToFill()
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 300)
-                    .clipped()
-                    .background(.red)
-                    .tag(index)
+            ForEach(0..<imageUrls.count, id: \.self) { index in
+                CachedAsyncImage(url: imageUrls[index],
+                                 targetSize: CGSize(width: UIScreen.main.bounds.width, height: 300)
+                               ) { image in
+                                   image
+                                       .resizable()
+                                       .scaledToFill()
+                               } placeholder: {
+                                   ProgressView()
+                               }
+                               .frame(maxWidth: .infinity)
+                               .frame(height: 300)
+                               .clipped()
+                               .tag(index)
             }
         }
         .tabViewStyle(PageTabViewStyle(indexDisplayMode: .automatic))
@@ -214,7 +288,7 @@ struct ImagePagerView: View {
         timer = Timer.publish(every: 3, on: .main, in: .common)
         timerCancellable = timer.autoconnect().sink { _ in
             withAnimation {
-                currentPage = (currentPage + 1) % images.count
+                currentPage = (currentPage + 1) % imageUrls.count
             }
         }
     }

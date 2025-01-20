@@ -13,6 +13,10 @@ final class VoteUseCase {
         self.repository = repository
     }
     
+    func vote(request: VoteRequest) async throws {
+        return try await repository.submitVote(request)
+    }
+    
     func getCandidate(id: Int, userId: String) async throws -> Candidate {
         return try await repository.getCandidate(id: id, userId: userId)
     }
