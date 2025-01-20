@@ -19,9 +19,14 @@ struct ProfileView: View {
 }
 
 struct CandidateDetailView: View {
-    let candidateId: Int  // 후보자 ID
+    let candidateId: CandidateList.Item  // 후보자 ID
+ //   @StateObject private var viewModel: CandidateDetailViewModel
     let sampleImages = ["book", "person", "star", "heart"]
     @Environment(\.dismiss) private var dismiss
+    
+    init(candidateId: CandidateList.Item) {
+            self.candidateId = candidateId
+        }
     
     var body: some View {
         ScrollView {
@@ -31,7 +36,7 @@ struct CandidateDetailView: View {
                 
                 VStack(alignment: .leading, spacing: 16) {
 
-                    VStack(alignment: .leading, spacing: 4) {  // spacing을 4로 설정
+                    VStack(alignment: .leading, spacing: 4) {
                         Text("임재현\(candidateId)")
                             .font(.kantumruyPro(size: 24, family: .semiBold))
                             .foregroundStyle(.white)
@@ -41,7 +46,6 @@ struct CandidateDetailView: View {
                             .foregroundStyle(.blue)
                     }
                     
-                    // 후보자 정보
                     VStack(alignment: .leading, spacing: 12) {
                         ProfileSectionRow(title: "Name",value: "임재현")
                             .padding(.top,8)

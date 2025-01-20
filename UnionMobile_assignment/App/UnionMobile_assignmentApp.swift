@@ -10,6 +10,18 @@ import SwiftData
 
 @main
 struct UnionMobile_assignmentApp: App {
+
+    private let networkService = NetworkService()
+    private let voteRepository: VoteRepository
+    private let voteUseCase: VoteUseCase
+    private let mainViewModel: MainViewModel
+        
+    init() {
+        voteRepository = VoteRepositoryImplements(networkService: networkService)
+        voteUseCase = VoteUseCase(repository: voteRepository)
+        mainViewModel = MainViewModel(voteUseCase: voteUseCase)
+    }
+    
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Item.self,
@@ -25,7 +37,8 @@ struct UnionMobile_assignmentApp: App {
 
     var body: some Scene {
         WindowGroup {
-            MainView()
+            MainView(viewModel: mainViewModel)
+           // PerformanceTestView(candidates: <#[CandidateList.Item]#>)
         }
         .modelContainer(sharedModelContainer)
     }

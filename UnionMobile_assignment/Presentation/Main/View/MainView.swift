@@ -8,6 +8,14 @@
 import SwiftUI
 
 struct MainView: View {
+    @State private var showingPerformanceTest = false
+    
+    @StateObject var viewModel: MainViewModel
+    
+       init(viewModel: MainViewModel) {
+           _viewModel = StateObject(wrappedValue: viewModel)
+       }
+    
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -165,9 +173,50 @@ struct MainView: View {
                     .padding(.top, 16)
                     .background(.red)
                     
-                    CandidateGridView()
-                        .background(.black)
-                        .padding(.top, 16)
+
+//            #if DEBUG
+//               // 테스트용 버튼들
+//               HStack {
+//                   Button("로딩 상태") {
+//                       viewModel.setLoadingState()
+//                   }
+//                   Button("빈 상태") {
+//                       viewModel.setEmptyState()
+//                   }
+//                   Button("에러 상태") {
+//                       viewModel.setErrorState()
+//                   }
+//               }
+//               .padding()
+//               #endif
+                    
+//                    Button("성능 테스트 실행") {
+//                                   showingPerformanceTest = true
+//                               }
+                    
+                    Group {
+                        if viewModel.isLoading {
+                            ProgressView()
+                                .frame(maxWidth: .infinity, minHeight: 200)
+                        } else if let error = viewModel.error {
+                            VStack {
+                                Text("데이터를 불러오는데 실패했습니다")
+                                    .foregroundColor(.red)
+                                Button("다시 시도") {
+                                    viewModel.fetchCandidates()
+                                }
+                            }
+                            .frame(maxWidth: .infinity, minHeight: 200)
+                        } else if viewModel.candidates.isEmpty {
+                            Text("후보자가 없습니다")
+                                .frame(maxWidth: .infinity, minHeight: 200)
+                                .foregroundStyle(.white)
+                        } else {
+                            CandidateGridView(candidates: viewModel.candidates)
+                                .background(.black)
+                                .padding(.top, 16)
+                        }
+                    }
                     
                     Text("© 2024 World Miss University. All rights reserved.")
                         .font(.kantumruyPro(size: 12, family: .bold))
@@ -179,8 +228,19 @@ struct MainView: View {
                     
 
                 }
+//                .sheet(isPresented: $showingPerformanceTest) {
+//                           PerformanceTestView(candidates: viewModel.candidates)
+//                       }
                 .frame(maxWidth: .infinity)
             }
+            .onAppear {
+                viewModel.fetchCandidates()
+            }
+            .refreshable {
+                await viewModel.fetchCandidates()
+            }
+            
+            
             .frame(maxWidth: .infinity)
             
             .background(.black)
@@ -198,6 +258,10 @@ struct MainView: View {
     }
 }
 
-#Preview {
-    MainView()
-}
+//#Preview {
+//    MainView()
+//}
+
+
+
+
