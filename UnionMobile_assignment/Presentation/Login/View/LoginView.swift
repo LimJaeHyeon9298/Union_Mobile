@@ -96,7 +96,7 @@ struct HeaderView: View {
             
             Image("Crown")
                 .resizable()
-                .background(.red)
+                .background(.black)
                 .frame(width: 230, height: 230)
         }
     }

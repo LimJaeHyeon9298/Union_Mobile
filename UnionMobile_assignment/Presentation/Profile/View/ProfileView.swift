@@ -71,7 +71,7 @@ struct CandidateDetailView: View {
                                 .frame(height: 200)
                         }
                         .frame(maxWidth: .infinity)
-                        .background(.red)
+                        .background(Color("252525"))
                     }
                     
                     HStack {
