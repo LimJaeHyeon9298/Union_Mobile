@@ -14,7 +14,7 @@ final class MainViewModel: ObservableObject {
     @Published private(set) var isLoading = false
     @Published private(set) var error: Error?
     @Published private(set) var showMaxVotesAlert = false
-    private var currentTask: Task<Void, Never>?
+    var currentTask: Task<Void, Never>?
     // 테스트를 위해 30초로 설정
      private let cacheValidityDuration: TimeInterval = 30
      private var lastFetchTime: Date?
@@ -60,7 +60,7 @@ final class MainViewModel: ObservableObject {
                     self.lastFetchTime = Date()
                     try await self.checkUserVoted(userId: userId)
                     print("API 호출 완료 - 받은 데이터 수: \(result.items.count)")
-                    print("API 호출 완료 - 받은 데이터 목록: \(result.items)")
+//                    print("API 호출 완료 - 받은 데이터 목록: \(result.items)")
                     
                 }
             } catch {

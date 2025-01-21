@@ -13,9 +13,9 @@ protocol VoteRepository {
 }
 
 final class VoteRepositoryImplements: VoteRepository {
-    private let networkService: NetworkService
+    private let networkService: NetworkServiceProtocol
     
-    init(networkService: NetworkService) {
+    init(networkService: NetworkServiceProtocol) {
         self.networkService = networkService
     }
     

@@ -10,7 +10,7 @@ import SwiftUI
 final class DIContainer {
     // MARK: - Network Layer
     private let session: URLSession
-    private let networkService: NetworkService
+    private let networkService: NetworkServiceProtocol
     
     // MARK: - Repository Layer
     private let voteRepository: VoteRepository
@@ -34,6 +34,21 @@ final class DIContainer {
         self.voteUseCase = VoteUseCase(repository: voteRepository)
         self.authUseCase = AuthUseCase(repository: authRepository)
     }
+    
+    // 테스트용 초기화
+       init(testNetworkService: NetworkServiceForTest) {
+           // Network Layer
+           self.session = .shared
+           self.networkService = testNetworkService
+           
+           // Repository Layer
+           self.voteRepository = VoteRepositoryImplements(networkService: testNetworkService)
+           self.authRepository = AuthRepositoryImplements(networkService: testNetworkService)
+           
+           // UseCase Layer
+           self.voteUseCase = VoteUseCase(repository: voteRepository)
+           self.authUseCase = AuthUseCase(repository: authRepository)
+       }
     
     // MARK: - ViewModel
     func makeMainViewModel() -> MainViewModel {
