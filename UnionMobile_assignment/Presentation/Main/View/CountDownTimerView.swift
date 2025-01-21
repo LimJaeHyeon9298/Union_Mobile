@@ -87,7 +87,7 @@ struct CountdownTimerView: View {
         .onDisappear {
             timer.stop()
         }
-        .onChange(of: scenePhase) {_, newPhase in
+        .onChange(of: scenePhase) { newPhase in
             switch newPhase {
             case .active:
                 timer.start()
@@ -134,25 +134,4 @@ struct TimeBlockView: View {
                 .foregroundColor(.secondary)
         }
     }
-}
-
-struct ContentView2: View {
-    var body: some View {
-        let calendar = Calendar.current
-        var dateComponents = DateComponents()
-        dateComponents.year = 2025
-        dateComponents.month = 1
-        dateComponents.day = 20
-        dateComponents.hour = 17
-        dateComponents.minute = 10
-        
-        let targetDate = calendar.date(from: dateComponents)!
-        
-        return CountdownTimerView(targetDate: targetDate)
-            .background(.red)
-    }
-}
-
-#Preview {
-    ContentView2()
 }

@@ -20,7 +20,7 @@ struct MainView: View {
        }
     
     var body: some View {
-        NavigationStack {
+        NavigationView {
             ScrollView {
                 VStack {
                     Text("World MISS UNIVERSITY")
@@ -34,7 +34,7 @@ struct MainView: View {
                         .padding(.top, 0)
                         .foregroundStyle(.white)
                     
-                    Image(systemName: "crown.circle")
+                    Image("Crown")
                         .resizable()
                         .background(.red)
                         .frame(width: 230,height: 230)
@@ -95,13 +95,15 @@ struct MainView: View {
                             Text("Period")
                                 .font(.kantumruyPro(size: 13, family: .bold))
                                 .padding(.leading, 8)
+                                .foregroundStyle(.white)
                             Spacer()
                             Text("10/17(Thu) 12PM ~ 10/31(Thu) 6PM")
                                 .font(.kantumruyPro(size: 13, family: .bold))
                                 .padding(.trailing, 8)
+                                .foregroundStyle(.white)
                         }
                         .frame(height: 43)
-                        .background(.brown)
+                        .background(Color("252525"))
                         .padding(.horizontal, 20)
                         .padding(.top, 8)
                         
@@ -140,7 +142,7 @@ struct MainView: View {
                             .padding(.top, 8)
                         }
                         .frame(minHeight: 80)
-                        .background(.brown)
+                        .background(Color("252525"))
                         .padding(.horizontal, 20)
                     }
                     .padding(.top, 12)
@@ -174,7 +176,7 @@ struct MainView: View {
                         
                     }
                     .padding(.top, 16)
-                    .background(.red)
+                    .background(.black)
                     Group {
                         if viewModel.isLoading {
                             ProgressView()
@@ -182,7 +184,7 @@ struct MainView: View {
                         } else if let error = viewModel.error {
                             VStack {
                                 Text("데이터를 불러오는데 실패했습니다")
-                                    .foregroundColor(.red)
+                                    .foregroundColor(.black)
                                 Button("다시 시도") {
                                     Task {
                                         await viewModel.fetchCandidates(userId:authState.userId)
@@ -198,6 +200,7 @@ struct MainView: View {
                         } else {
                             CandidateGridView(candidates: viewModel.candidates,container:container,viewModel:viewModel)
                                 .background(.black)
+                            
                                 .padding(.top, 16)
                                 .task {
                                     do {
@@ -221,6 +224,7 @@ struct MainView: View {
                 .onAppear {
                     Task {
                         await viewModel.fetchCandidates(userId:authState.userId)
+                        
                    
                     }
                 }
@@ -255,21 +259,13 @@ struct MainView: View {
                     
                 }
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(.white, for: .navigationBar)
-               .toolbarBackground(.visible, for: .navigationBar)
-               .toolbarColorScheme(.light, for: .navigationBar)
+                .modifier(NavigationBarModifier())
+//                .toolbarBackground(.white, for: .navigationBar)
+//               .toolbarBackground(.visible, for: .navigationBar)
+//               .toolbarColorScheme(.light, for: .navigationBar)
         }
     }
 }
-
-//#Preview {
-//    MainView()
-//}
-
-
-
-
-
 
 //            #if DEBUG
 //               // 테스트용 버튼들

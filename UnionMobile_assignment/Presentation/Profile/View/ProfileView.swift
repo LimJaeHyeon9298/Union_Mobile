@@ -8,15 +8,6 @@
 import SwiftUI
 import Combine
 
-struct ProfileView: View {
-    var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
-    }
-}
-
-#Preview {
-    ProfileView()
-}
 
 struct CandidateDetailView: View {
     let candidateId: CandidateList.Item  // 후보자 ID
@@ -72,7 +63,7 @@ struct CandidateDetailView: View {
                             ProfileSectionRow(title: "Talent", value: detail.talent)
                             ProfileSectionRow(title: "Ambition", value: detail.ambition)
                         }
-                        .background(.red)
+                        .background(Color("252525"))
                         .padding(.top, 8)
                     } else {
                         VStack {
@@ -169,12 +160,34 @@ struct CandidateDetailView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.white, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarColorScheme(.light, for: .navigationBar)
+//        .toolbarBackground(.white, for: .navigationBar)
+//        .toolbarBackground(.visible, for: .navigationBar)
+//        .toolbarColorScheme(.light, for: .navigationBar)
+        .modifier(NavigationBarModifier())
         
         
         .background(.black)
+    }
+}
+
+struct NavigationBarModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 16.0, *) {
+            content
+                .toolbarBackground(.white, for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
+                .toolbarColorScheme(.light, for: .navigationBar)
+        } else {
+            content
+                .onAppear {
+                    let appearance = UINavigationBarAppearance()
+                    appearance.configureWithOpaqueBackground()
+                    appearance.backgroundColor = .white
+                    UINavigationBar.appearance().standardAppearance = appearance
+                    UINavigationBar.appearance().compactAppearance = appearance
+                    UINavigationBar.appearance().scrollEdgeAppearance = appearance
+                }
+        }
     }
 }
 
@@ -266,11 +279,11 @@ struct ImagePagerView: View {
             stopTimer()
         }
         // 페이지 변경 시 타이머 리셋
-        .onChange(of: currentPage) { _, _ in
+        .onChange(of: currentPage) {  _ in
             resetTimer()
         }
         // 앱의 상태 변화 감지
-        .onChange(of: scenePhase) { _, newPhase in
+        .onChange(of: scenePhase) {  newPhase in
             switch newPhase {
             case .active:
                 startTimer()    // 앱이 활성화될 때 타이머 시작

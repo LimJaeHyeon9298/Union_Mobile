@@ -123,8 +123,78 @@ struct CandidateCardView: View {
     }
 }
 
+//struct CandidateGridView: View {
+//    
+//    let candidates: [CandidateList.Item]
+//    let container: DIContainer
+//    @ObservedObject var viewModel: MainViewModel
+//    
+//    let columns = [
+//        GridItem(.flexible(), spacing: 16),
+//        GridItem(.flexible(), spacing: 16)
+//    ]
+//    
+//    var body: some View {
+//  
+//        GeometryReader { geometry in
+//            let spacing: CGFloat = 16
+//            let numberOfColumns: CGFloat = 2
+//            let itemWidth = (geometry.size.width - spacing - 32) / numberOfColumns
+//            
+//            LazyVGrid(
+//                columns: columns,
+//                spacing: spacing
+//            ) {
+//                ForEach(candidates, id: \.id) { candidate in
+//                    CandidateCardView(width: itemWidth,candidateId: candidate,container: container,viewModel:viewModel)
+//                }
+//            }
+//            .padding(.horizontal, 16)
+//        }
+//        .frame(minHeight: calculateMinHeight(count: candidates.count))
+//    }
+//    
+//    private func calculateMinHeight(count: Int) -> CGFloat {
+//           // 한 카드의 대략적인 높이 (이미지 + 패딩 + 텍스트 등)
+//           let cardHeight: CGFloat = 430  // 실제 카드의 전체 높이에 맞게 조정
+//           let rows = ceil(Double(count) / 2.0)  // 2열이므로 2로 나눔
+//           return cardHeight * CGFloat(rows)
+//       }
+//}
+//struct CandidateGridView: View {
+//    let candidates: [CandidateList.Item]
+//    let container: DIContainer
+//    @ObservedObject var viewModel: MainViewModel
+//    
+//    let columns = [
+//        GridItem(.flexible(), spacing: 16),
+//        GridItem(.flexible(), spacing: 16)
+//    ]
+//    
+//    var body: some View {
+//        GeometryReader { geometry in
+//            let spacing: CGFloat = 16
+//            let numberOfColumns: CGFloat = 2
+//            let itemWidth = (geometry.size.width - spacing - 32) / numberOfColumns
+//            let cardHeight = itemWidth + 80
+//            
+//            LazyVGrid(
+//                columns: columns,
+//                spacing: spacing
+//            ) {
+//                ForEach(candidates, id: \.id) { candidate in
+//                    CandidateCardView(width: itemWidth, candidateId: candidate, container: container, viewModel: viewModel)
+//                }
+//            }
+//            .padding(.horizontal, 16)
+//        }
+//        // 카드 하나의 실제 높이 * 행의 개수만큼만 공간 차지
+//        .frame(height: CGFloat((candidates.count) / 2) * cardHeight + 16)
+//      
+//    }
+//}
+
 struct CandidateGridView: View {
-    
     let candidates: [CandidateList.Item]
     let container: DIContainer
     @ObservedObject var viewModel: MainViewModel
@@ -135,23 +205,18 @@ struct CandidateGridView: View {
     ]
     
     var body: some View {
-  
-        GeometryReader { geometry in
-            let spacing: CGFloat = 16
-            let numberOfColumns: CGFloat = 2
-            let itemWidth = (geometry.size.width - spacing - 32) / numberOfColumns
-            
-            LazyVGrid(
-                columns: columns,
-                spacing: spacing
-            ) {
-                ForEach(candidates, id: \.id) { candidate in
-                    CandidateCardView(width: itemWidth,candidateId: candidate,container: container,viewModel:viewModel)
-                }
+        LazyVGrid(
+            columns: columns,
+            spacing: 16
+        ) {
+            ForEach(candidates, id: \.id) { candidate in
+                CandidateCardView(width: (UIScreen.main.bounds.width - 48) / 2,
+                                candidateId: candidate,
+                                container: container,
+                                viewModel: viewModel)
             }
-            .padding(.horizontal, 16)
         }
-        .frame(height: CGFloat(candidates.count) * 320 / 2)
+        .padding(.horizontal, 16)
     }
 }
 

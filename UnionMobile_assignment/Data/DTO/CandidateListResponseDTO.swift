@@ -5,7 +5,7 @@
 //  Created by 임재현 on 1/18/25.
 //
 
-// Data/DTO/Vote/CandidateListResponseDTO.swift
+
 struct CandidateListResponseDTO: Decodable {
     let content: [CandidateListItemDTO]
     let pageable: PageableDTO

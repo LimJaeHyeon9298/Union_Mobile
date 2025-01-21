@@ -81,8 +81,31 @@ actor ImageCache {
 @MainActor
 extension Image {
     func toUIImage() -> UIImage? {
-        let renderer = ImageRenderer(content: self)
-        return renderer.uiImage
+        if #available(iOS 16.0, *) {
+            let renderer = ImageRenderer(content: self)
+            return renderer.uiImage
+        } else {
+            return self.snapshot()
+        }
+    }
+}
+
+@available(iOS, deprecated: 16.0, message: "Use ImageRenderer instead when available")
+@MainActor
+extension View {
+    func snapshot() -> UIImage? {
+        let controller = UIHostingController(rootView: self)
+        let view = controller.view
+        
+        let targetSize = controller.view.intrinsicContentSize
+        view?.bounds = CGRect(origin: .zero, size: targetSize)
+        view?.backgroundColor = .clear
+        
+        let renderer = UIGraphicsImageRenderer(size: targetSize)
+        
+        return renderer.image { _ in
+            view?.drawHierarchy(in: controller.view.bounds, afterScreenUpdates: true)
+        }
     }
 }
 
@@ -124,6 +147,48 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
                 placeholder()
             @unknown default:
                 placeholder()
+            }
+        }
+    }
+}
+
+
+extension View {
+    func clearButton(text: Binding<String>) -> some View {
+        modifier(ClearButton(text: text))
+    }
+    
+    func placeholder<Content: View>(
+            when shouldShow: Bool,
+            alignment: Alignment = .leading,
+            @ViewBuilder placeholder: () -> Content) -> some View {
+            
+            ZStack(alignment: alignment) {
+                placeholder().opacity(shouldShow ? 1 : 0)
+                self
+            }
+        }
+    
+    func setupKeyboardHandling(geometry: GeometryProxy, offset: Binding<CGFloat>) -> some View {
+        modifier(KeyboardHandlingModifier(geometry: geometry, offset: offset))
+    }
+}
+
+struct ClearButton: ViewModifier {
+    @Binding var text: String
+    
+    func body(content: Content) -> some View {
+        HStack {
+            content
+            
+            if !text.isEmpty {
+                Button(action: {
+                    text = ""
+                }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.gray)
+                }
+                .padding(.trailing, 8)
             }
         }
     }

@@ -60,6 +60,8 @@ final class MainViewModel: ObservableObject {
                     self.lastFetchTime = Date()
                     try await self.checkUserVoted(userId: userId)
                     print("API 호출 완료 - 받은 데이터 수: \(result.items.count)")
+                    print("API 호출 완료 - 받은 데이터 목록: \(result.items)")
+                    
                 }
             } catch {
                 if !Task.isCancelled {
